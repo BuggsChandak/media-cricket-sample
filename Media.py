@@ -11,7 +11,6 @@ table = client_dynamodb.Table(table_name)
 def detect_text(file_names):
 
     start_time_secs = 0
-    end_time_secs = 30
     frame=1
     prev_over=''
 
@@ -23,6 +22,7 @@ def detect_text(file_names):
         response = client_rekognition.detect_text(Image={'Bytes': image})
         textDetections = response['TextDetections']
         print('Detected text\n----------')
+        text_over=''
         for text in textDetections:
             if ((math.trunc(text['Geometry']['BoundingBox']['Left'] * 100 ) / 100) == 0.33 and (math.trunc(text['Geometry']['BoundingBox']['Top'] * 100) / 100) == 0.86):
                 id=text['Id']
@@ -48,25 +48,26 @@ def detect_text(file_names):
 
         if (prev_over==text_over):
             frame=frame+1
-            start_time_secs=start_time_secs+30
-            end_time_secs=end_time_secs+30
-            print ("Hello" + prev_over+" "+text_over)
-        else:
+            start_time_secs=start_time_secs+1
+            print ("Hello Prev_over:" + prev_over+" text_over:"+text_over+" frame:"+str(frame)+" start:"+str(start_time_secs))
+        elif (text_over==''):
+            frame=frame+1
+            start_time_secs=start_time_secs+1
+            print ("Hello1 Prev_over:" + prev_over+" text_over:"+text_over+" frame:"+str(frame)+" start:"+str(start_time_secs))
+        else:    
             data = {
             'frame': frame,
             'over_no': over,
             'ball_no': ball_no,
             'start_time_secs': start_time_secs,
-            'end_time_secs': end_time_secs,
             'confidence': conf
         }
-#            table.put_item(Item=data)
+            table.put_item(Item=data)
             print("Data inserted into DynamoDB table")
             print(len(textDetections))
-            print ("Hi1" + prev_over+" "+text_over)
+            print ("Hi1 Prev_over:" + prev_over+" text_over:"+text_over+" frame:"+str(frame)+" start:"+str(start_time_secs))
             print (data)
-            start_time_secs=start_time_secs+30
-            end_time_secs=end_time_secs+30
+            start_time_secs=start_time_secs+1
             prev_over=text_over
             frame=frame+1
         print()
